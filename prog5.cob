@@ -11,23 +11,23 @@
 
                 Select Real-Estate-File 
                        assign to "/home1/c/a/acsi203/realestate.dat".
-		Select City-Rates-File
+		Select cityRatesFile
                        assign to "/home1/c/a/acsi203/cityrates.dat"
 		       organization is line sequential.
-                Select Output-File
+                Select outputFile
                        assign to "prog5out.dat"
                        organization is line sequential.
-		Select Error-File
+		Select errorFile
 			assign to "error5out.dat"
 			organization is line sequential.
 
         Data Division.
 
         File Section.
-	FD	City-Rates-File.
-	01	City-Rates-Input.
-		02 City-Name		Pic x(15).
-		02 Multiplier-Rate	Pic v999.
+	FD	cityRatesFile.
+	01	cityRatesInput.
+		02 cityName		Pic x(15).
+		02 multiplierRate	Pic v999.
 
 	FD	Real-Estate-File.
 	01	Input-Rec.
@@ -59,10 +59,10 @@
 		02 Longitude		Pic 9(7)v99.
 		02 Filler		Pic x.
 
-	FD	Error-File.
+	FD	errorFile.
 	01	Error-Rec		Pic x(114).
 
-	FD	Output-File
+	FD	outputFile
 		Linage is 58 lines with footing at 56
 		lines at top 5
 		lines at bottom 5.
@@ -74,7 +74,7 @@
 	77	row-index		Pic 9 value zero.
 	77	column-index		Pic 9 value zero.
 
-	01	BaB-baths-header.
+	01	BaBBathsHeader.
 		02 filler		Pic x(7) value spaces.
 		02 filler		Pic x(5) value "Baths".
 		02 filler		Pic x(5) value spaces.
@@ -89,14 +89,12 @@
 		02 filler		Pic x(1) value "5".
 		
 
-	01	BaB-beds-header.
-
-		02 filler		Pic x(6) value "Bedrms".
+	01	BaBBedsHeader		Pic x(6) value "Bedrms".
 		
 
-	01	BaB-sale-accum		Pic 9(14).
+	01	BaBSaleAccum		Pic 9(14).
 
-	01	Bed-and-bath-table-out.
+	01	bedAndBathTableOut.
 		03 filler		Pic x(6) value spaces.
 		02 row-index-out	Pic 9 value zero.
 		02 BaB-price-out occurs 6 times.
@@ -298,21 +296,25 @@
 
       * Executes 'Init', 'Main-Loop', and 'Finish', in that order
 	0000-Main-Logic.
+
 		Perform 1000-Init.
+
 		Perform 1200-Main-Loop until end-reached.
+
 		Perform 1300-Finish.
+
 		Stop Run.
 
-      * opens Real-Estate-File and output-file, writes report header
+      * opens Real-Estate-File and outputFile, writes report header
       * writes line of spaces, then writes column headers
       * and writes the first output-rec
 	1000-Init.
 
 		
 		Open Input Real-Estate-File
-			   City-Rates-File. 
-               	Open Output Output-File
-		     	   Error-File.
+			   cityRatesFile. 
+               	Open Output outputFile
+		     	   errorFile.
 
 		Move function current-date to Todays-Date.
 
@@ -323,25 +325,27 @@
 		Move Report-Header to Output-Rec.
 
 		Write Output-Rec from Report-Header.
+
 		Move spaces to Output-Rec.
+
 		Write Output-Rec.
+
 		Write Output-Rec from Column-headers.
+
 		Move spaces to Output-Rec.
+
 		Write Output-Rec.
 
 		Read Real-Estate-File at end move "yes" to Eof-Flag.
 
-		Perform 
-		varying city-index from 1 by 1 until city-index > 22
+		Perform 1066-Read-City-Data
+		varying city-index from 1 by 1 until city-index > 22.
 		
-		Read City-Rates-File into 
-			City-Rates-Data(city-index)
-			
-		END-Perform.
+      * reads the cityrates.dat file into a one-dimensional table
+	1066-Read-City-Data.
 
-
-
-
+	Read cityRatesFile into 
+			City-Rates-Data(city-index).
 
       * performs 2100-Validation, and if the record is bad, 2999-Error is performed; else, 2200-Process is performed
 	1200-Main-Loop.
@@ -416,32 +420,43 @@
 		when City-Code(city-index)
 		= City
 
-		Compute BaB-sale-accum = 
+		Compute BaBSaleAccum = 
 		Sale-Price * (1 + Exp-City-Code(city-index)).
 
-		Move BaB-sale-accum to Sale-Price-Out.
+		Move BaBSaleAccum to Sale-Price-Out.
 
 		If Bedrooms > 0 and Bathrooms > 0
 
-		Add BaB-sale-accum to BaB-baths(Bedrooms, Bathrooms)
+		Add BaBSaleAccum to BaB-baths(Bedrooms, Bathrooms)
 
 		End-if.
 
 		Move Adrs to Adrs-Out.
+
 		Move City to City-Out.
+
 		Move Zip to Zip-Out.
+
 		Move State to State-Out.
 		
 		Move Bathrooms to Bathrooms-Out.
+
 		Move Square-Feet to Square-Feet-Out.
+
                	Move Property-Type to Property-Type-Out.
+
 		Move Sale-Day to Sale-Day-Out.
+
                 Move Sale-Month to Sale-Month-Out.
+
                 Move Sale-Year to Sale-Year-Out.
 		
 		Move dayOfWeek to dayOfWeek-Out.
+
 		Move Sale-hour to sale-hour-Out.
+
 		Move Sale-minute to sale-min-out.
+
 		Move Sale-second to sale-sec-Out.
 
 		Add 1 to report-accum.
@@ -452,16 +467,16 @@
 
 		if Bedrooms > 0
 
-			Add BaB-sale-accum to sale-prices(Bedrooms).
+			Add BaBSaleAccum to sale-prices(Bedrooms).
 		
 		IF Square-Feet > 0 THEN
 			Add Square-Feet to SqFt-accum
 			Add 1 to Nonzero-counter
-			Divide BaB-sale-accum into Sale-Price GIVING 
+			Divide BaBSaleAccum into Sale-Price GIVING 
 				Price-p-SqFt-Out
 			Add Bathrooms to Bath-accum
 			Add Bedrooms to Bed-accum
-			Add BaB-sale-accum to Sale-accum
+			Add BaBSaleAccum to Sale-accum
 		ELSE
 			Move 0 to Price-p-SqFt
 			MOVE Price-p-SqFt TO Price-p-SqFt-Out
@@ -489,9 +504,11 @@
 	1300-Finish.
 
 		Move spaces to Output-Rec.
+
 		Write Output-Rec.
 
 		Move spaces to Output-Rec.
+
 		Write Output-Rec.
 
 		Divide Nonzero-counter into Bed-accum.
@@ -513,11 +530,15 @@
 		Write Output-rec from Average-line.
 		
 		Move report-accum to Counter-out.
+
 		Move spaces to Output-Rec.
+
 		Write Output-Rec.
 		
 		Write Output-Rec from Report-Counter.
+
 		Move spaces to Output-Rec.
+
 		Write Output-Rec.
 
 		Write Output-Rec from Report-Footer.
@@ -536,12 +557,13 @@
 
 		Perform 3001-Blank-line until Eop-Flag = "yes".
 		Add 1 to Page-number.
+
 		Write Output-Rec from Page-number-line.
 
-		Write Output-Rec from BaB-baths-header
+		Write Output-Rec from BaBBathsHeader
 		    after advancing page.
 
-		Write Output-Rec from BaB-beds-header.
+		Write Output-Rec from BaBBedsHeader.
 
 		Perform 3003-Baths-and-beds-table-loop
 		   varying row-index from 1 by 1 until 
@@ -557,40 +579,51 @@
 
 		Write Output-Rec from Page-number-line.
 		
-		Close Real-Estate-File Output-File Error-File 
-		City-Rates-File.
+		Close Real-Estate-File outputFile errorFile 
+		cityRatesFile.
 
+      * moves each value of the table on page 7 to the table that actually gets printed
 	3301-Print-BaB-row.
 	
 		Move BaB-baths(row-index, column-index) to 
 		BaB-total-out(column-index).
 
+      * paragraph that actually writes the table to the Output-Rec
 	3003-Baths-and-beds-table-loop.
 		
 		Move row-index to row-index-out.
+
 		Perform 3301-Print-BaB-row varying column-index from 1
 		   by 1 until column-index > 5.
 
-		Write Output-Rec from Bed-and-bath-table-out.
+		Write Output-Rec from bedAndBathTableOut.
 
-	
+      * prints blank lines until the end of each page
 	3001-Blank-line.
+
 		Write Output-Rec from Line-spaces
 		at eop move "yes" to Eop-Flag.
 
+      * writes each page number line and column headers
 	1999-Page-End.
 		
 		Write Output-Rec from Page-number-line after
 		advancing 2 lines.
+	
 		Write Output-Rec from Column-headers after
 		advancing page.
+
 		Add 1 to Page-number.
 
+      * creates table on page 6, which has the total prices for each number of bathrooms
 	3002-Final-Loop.
 
 		Move "no" to Eop-Flag.
+
 		Move beds(Bedroom-index + 1) to Beds-per-sale-price.
+
 		Move sale-prices(Bedroom-index) to 
 		Sale-price-per-beds.
+
 		Write Output-Rec from Beds-and-sale-price.
 
